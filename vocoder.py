@@ -57,7 +57,7 @@ class Filter():
     
 class SourceFilterVocoder(Vocoder):
     __metaclass__ = abc.ABCMeta
-       
+        
     @abc.abstractmethod     
     def __init__(self):
         self.src = Source()
