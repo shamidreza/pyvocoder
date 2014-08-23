@@ -12,47 +12,63 @@ class Vocoder():
     def encode(self, wav):
         pass
     @abc.abstractmethod
-    def decode(self, parameters):
+    def decode(self):
         pass
+    
+
+class Source():
+    __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod      
+    def __init__(self):
+        pass
+    
+    @abc.abstractmethod          
+    def encode(self, wav):
+        pass 
+    
+    @abc.abstractmethod      
+    def decode(self):
+        pass
+    
+class Filter():
+    __metaclass__ = abc.ABCMeta
+    
+    @abc.abstractmethod          
+    def __init__(self):
+        pass
+    
+    @abc.abstractmethod          
+    def encode(self, wav):
+        pass    
+    
+    @abc.abstractmethod      
+    def decode(self, src_signal):
+        pass
+    @abc.abstractmethod              
+    def _filter_frame(self, src_signal):
+        pass
+    @abc.abstractmethod              
+    def filter2spectrum():
+        pass
+    @abc.abstractmethod              
+    def spectrum2filter():
+        pass    
+    
     
 class SourceFilterVocoder(Vocoder):
     __metaclass__ = abc.ABCMeta
+       
+    @abc.abstractmethod     
     def __init__(self):
-        self.src = None
-        self.filt = None
-    @abc.abstractmethod    
-    def encode_source(self, wav):
-        pass
-    
-    @abc.abstractmethod    
-    def encode_filter(self, wav):
-        pass
-    
-    @abc.abstractmethod    
-    def decode_source(self, parameters):
-        pass
-    
-    @abc.abstractmethod    
-    def decode_filter(self, parameters):
-        pass    
-    
-    def filter(self, src, filt):
-        # No abstract
-        # frame src
-        # _filter_frame(every frame)
-        pass
-    
-    @abc.abstractmethod            
-    def _filter_frame(self, src, filt):
-        pass
+        self.src = Source()
+        self.filt = Filter()
     
     def encode(self, wav):
         self. src = self.encode_source(wav)
         self. trg = self.encode_filter(wav)
         
     def decode(self):                 
-        src = self.decode_source(self.src)
-        filt = self.decode_filter(self.filt)
-        wav = self.filter(src, filt)
+        src =  self.src.decode()
+        wav = self.filt.decode(src)
         return wav
     
