@@ -5,21 +5,23 @@ import numpy as np
 from matplotlib import pyplot as pp
 
 from vocoder import SourceFilterVocoder, Filter
+import source
 
+from scikits.talkbox import lpc
+from scipy.signal import lfilter, hamming, freqz
+        
 def levinson_durbin():
     pass
 
 class LPCVocoder(SourceFilterVocoder):
-    def __init__(self, order):
-        self.src = None
-        self.filt = LPCFilter(order)
+    def __init__(self, order, fs):
+        self.src = source.PulseNoiseSource()
+        self.filt = LPCFilter(order, fs)
         
 class LPCFilter(Filter):
     
-    def __init__(self, order):
-        Filter.__init__(self, order)
-        from scikits.talkbox import lpc
-        from scipy.signal import lfilter, hamming, freqz
+    def __init__(self, order, fs):
+        Filter.__init__(self, order, fs)
    
     def _encode_frame(self, signal):
         A, e, k = lpc(signal, self.order) 
@@ -36,10 +38,11 @@ if __name__ == '__main__':
     order = 18
     import wave
     spf = wave.open(fname, 'r') # http://www.linguistics.ucla.edu/people/hayes/103/Charts/VChart/ae.wav
+    fs = spf.getframerate()
     # Get file as numpy array.
     x = spf.readframes(-1)
     x = np.fromstring(x, 'Int16')
     
-    voc = LPCVocoder(order)
+    voc = LPCVocoder(order, fs)
     voc.encode(x)
     pass
