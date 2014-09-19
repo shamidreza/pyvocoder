@@ -35,11 +35,10 @@ class Source():
 class Filter():
     __metaclass__ = abc.ABCMeta
     
-    @abc.abstractmethod          
-    def __init__(self):
-        pass
+    def __init__(self, order):
+        self.order = order
     
-    def encode(self, wav, order, frame_len, frame_step):
+    def encode(self, wav, frame_len, frame_step):
         self.frames = frame.framesig(wav, frame_len, frame_step, winfunc=lambda x:numpy.ones((1,x)))
         self.params = np.zeros((self.frames.shape[0], order))
         for i in range(self.frames.shape[0]):
@@ -48,15 +47,15 @@ class Filter():
     def decode(self, src_signal):
         src_frames = frame.framesig(src_signal, frame_len, frame_step, winfunc=lambda x:numpy.ones((1,x)))
         for i in range(self.frames.shape[0]):
-            self.frames[i, :] = self._decode_frame(self.src_frames[i])
+            self.frames[i, :] = self._decode_frame(self.params[i, :], self.src_frames[i])
         wav = frame.deframesig(self.frames, frame_len, frame_step, winfunc=lambda x:numpy.ones((1,x)))
         return wav
     
     @abc.abstractmethod              
-    def _encode_frame(self, src_signal):
+    def _encode_frame(self, signal):
         pass    
     @abc.abstractmethod              
-    def _decode_frame(self, src_signal):
+    def _decode_frame(self, params, src_signal):
         pass
     @abc.abstractmethod              
     def filter2spectrum():
