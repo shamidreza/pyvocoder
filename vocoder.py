@@ -74,8 +74,8 @@ class SourceFilterVocoder(Vocoder):
         self.filt = Filter()
     
     def encode(self, wav):
-        self.src = self.encode_source(wav)
-        self.trg = self.encode_filter(wav)
+        self.src = self.src.encode(wav)
+        self.trg = self.filt.encode(wav)
         
     def decode(self):                 
         src =  self.src.decode()

@@ -1,21 +1,23 @@
 """
 LPC class
 """
-import numpy 
+import numpy as np
+from matplotlib import pyplot as pp
+
 from vocoder import SourceFilterVocoder, Filter
 
 def levinson_durbin():
     pass
 
 class LPCVocoder(SourceFilterVocoder):
-    def __init__(self):
+    def __init__(self, order):
         self.src = None
-        self.filt = LPCFilter()
+        self.filt = LPCFilter(order)
         
 class LPCFilter(Filter):
     
     def __init__(self, order):
-        Filter.__init__(order)
+        Filter.__init__(self, order)
         from scikits.talkbox import lpc
         from scipy.signal import lfilter, hamming, freqz
    
@@ -31,9 +33,13 @@ class LPCFilter(Filter):
  
 if __name__ == '__main__':
     fname = '/Users/hamid/Code/gitlab/voice-conversion/src/test/wav/ga_8_Kevin.wav'
+    order = 18
     import wave
     spf = wave.open(fname, 'r') # http://www.linguistics.ucla.edu/people/hayes/103/Charts/VChart/ae.wav
     # Get file as numpy array.
     x = spf.readframes(-1)
-    x = numpy.fromstring(x, 'Int16')
-     
+    x = np.fromstring(x, 'Int16')
+    
+    voc = LPCVocoder(order)
+    voc.encode(x)
+    pass
