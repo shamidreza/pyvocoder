@@ -4,7 +4,7 @@ basic classes
 import abc
 
 import frame
-
+ 
 class Vocoder():
     __metaclass__ = abc.ABCMeta
     @abc.abstractmethod    
