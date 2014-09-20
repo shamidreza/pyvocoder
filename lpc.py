@@ -42,7 +42,8 @@ if __name__ == '__main__':
     # Get file as numpy array.
     x = spf.readframes(-1)
     x = np.fromstring(x, 'Int16')
-    
+    import source
+    f0 = source.getf0(fname)
     voc = LPCVocoder(order, fs)
     voc.encode(x)
     pass
