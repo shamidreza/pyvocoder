@@ -29,7 +29,7 @@ class LPCFilter(Filter):
     def _decode_frame(self, param, src_signal):
         return lfilter([1], param, src_signal)
     def filter2spectrum(self, param):
-        return freqz([1], param)[1]
+        return np.abs(freqz([1], param)[1])
     def spectrum2filter():
         pass    
  

@@ -42,6 +42,7 @@ class Filter():
         self.order = order
         self.fs = fs
     def encode(self, wav, frame_len=0.025, frame_step=0.010):
+        wav = frame.preemphasis(wav,coeff=0.97)##
         self.frame_len = int(frame_len * self.fs)
         self.frame_step = int(frame_step * self.fs)
         
