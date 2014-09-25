@@ -17,7 +17,9 @@ class Vocoder():
     @abc.abstractmethod
     def decode(self):
         pass
-    
+    @abc.abstractmethod
+    def spectrogram(self):
+        pass    
 
 class Source():
     __metaclass__ = abc.ABCMeta
@@ -52,8 +54,8 @@ class Filter():
     def decode(self, src_signal):
         src_frames = frame.framesig(src_signal, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         for i in range(self.frames.shape[0]):
-            self.frames[i, :] = self._decode_frame(self.params[i, :], self.src_frames[i])
-        wav = frame.deframesig(self.frames, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+            self.frames[i, :] = self._decode_frame(self.params[i, :], src_frames[i])
+        wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         return wav
     
     @abc.abstractmethod              
@@ -63,10 +65,10 @@ class Filter():
     def _decode_frame(self, params, src_signal):
         pass
     @abc.abstractmethod              
-    def filter2spectrum():
+    def filter2spectrum(self, params):
         pass
     @abc.abstractmethod              
-    def spectrum2filter():
+    def spectrum2filter(self):
         pass    
     
     
@@ -88,3 +90,8 @@ class SourceFilterVocoder(Vocoder):
         wav = self.filt.decode(src)
         return wav
     
+    def spectrogram(self):
+        spec = np.zeros((self.filt.params.shape[0], 512))
+        for i in range(self.filt.params.shape[0]):
+            spec[i, :] = self.filt.filter2spectrum(self.filt.params[i,:])    
+        return spec

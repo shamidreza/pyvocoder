@@ -60,8 +60,8 @@ def deframesig(frames,siglen,frame_len,frame_step,winfunc=lambda x:numpy.ones((1
     win = winfunc(frame_len)
     
     for i in range(0,numframes):
-        window_correction[indices[i,:]] = window_correction[indices[i,:]] + win + 1e-15 #add a little bit so it is never zero
-        rec_signal[indices[i,:]] = rec_signal[indices[i,:]] + frames[i,:]
+        window_correction[0,indices[i,:]] = window_correction[0,indices[i,:]] + win[0,:] + 1e-15 #add a little bit so it is never zero
+        rec_signal[0, indices[i,:]] = rec_signal[0, indices[i,:]] + frames[i,:]
         
     rec_signal = rec_signal/window_correction
     return rec_signal[0:siglen]

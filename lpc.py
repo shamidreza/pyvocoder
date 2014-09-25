@@ -17,7 +17,7 @@ class LPCVocoder(SourceFilterVocoder):
     def __init__(self, order, fs):
         self.src = source.PulseNoiseSource(fs)
         self.filt = LPCFilter(order, fs)
-        
+    
 class LPCFilter(Filter):
     
     def __init__(self, order, fs):
@@ -28,8 +28,8 @@ class LPCFilter(Filter):
         return A
     def _decode_frame(self, param, src_signal):
         return lfilter([1], param, src_signal)
-    def filter2spectrum(param):
-        freqz([1], param)
+    def filter2spectrum(self, param):
+        return freqz([1], param)[1]
     def spectrum2filter():
         pass    
  
@@ -46,5 +46,6 @@ if __name__ == '__main__':
     #f0 = source.getf0_python(x, fs, frame_len=0.025, frame_step=0.010 )
     voc = LPCVocoder(order, fs)
     voc.encode(x)
+    spec = voc.spectrogram()
     voc.decode()
     pass

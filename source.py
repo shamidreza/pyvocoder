@@ -104,7 +104,7 @@ class PulseNoiseSource(Source):
         self.time = np.linspace(0, self.duration, self.f0.shape[0])/self.fs
     def decode(self):
         ret = np.zeros(self.duration)
-        noise = np.random.rand(self.duration)        
+        noise = np.random.rand(self.duration)/5.0        
         pulse = np.zeros(self.duration)
         cur_period = 100
         cur = cur_period
