@@ -74,14 +74,14 @@ class SourceFilterVocoder(Vocoder):
     __metaclass__ = abc.ABCMeta
         
     @abc.abstractmethod     
-    def __init__(self):
+    def __init__(self, order, fs):
         #self.src = Source()
         #self.filt = Filter()
         pass
     
     def encode(self, wav):
-        self.src = self.src.encode(wav)
-        self.trg = self.filt.encode(wav)
+        self.src.encode(wav)
+        self.filt.encode(wav)
         
     def decode(self):                 
         src =  self.src.decode()

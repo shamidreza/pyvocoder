@@ -15,7 +15,7 @@ def levinson_durbin():
 
 class LPCVocoder(SourceFilterVocoder):
     def __init__(self, order, fs):
-        self.src = source.PulseNoiseSource()
+        self.src = source.PulseNoiseSource(fs)
         self.filt = LPCFilter(order, fs)
         
 class LPCFilter(Filter):
@@ -43,7 +43,8 @@ if __name__ == '__main__':
     x = spf.readframes(-1)
     x = np.fromstring(x, 'Int16')
     import source
-    f0 = source.getf0(fname)
+    #f0 = source.getf0_python(x, fs, frame_len=0.025, frame_step=0.010 )
     voc = LPCVocoder(order, fs)
     voc.encode(x)
+    voc.decode()
     pass
