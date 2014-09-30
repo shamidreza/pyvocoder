@@ -42,32 +42,27 @@ class Filter():
         self.order = order
         self.fs = fs
     def encode(self, wav, frame_len=0.025, frame_step=0.010):
-        wav = frame.preemphasis(wav,coeff=0.97)##       
         self.frame_len = int(frame_len * self.fs)
-        self.frame_step = int(frame_step * self.fs)
-        
+        self.frame_step = int(frame_step * self.fs)        
+        self.energy = frame.get_energy(wav, self.frame_len, self.frame_step)        
+        wav = frame.preemphasis(wav,coeff=0.97)##       
+
         self.frames = frame.framesig(wav, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         param_size = len(self._encode_frame(self.frames[0]))
         self.params = np.zeros((self.frames.shape[0], param_size))
         for i in range(self.frames.shape[0]):
             self.params[i, :] = self._encode_frame(self.frames[i])
-             
     def decode(self, src_signal):
         src_frames = frame.framesig(src_signal, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+        src_energy = frame.get_energy(src_signal, self.frame_len, self.frame_step)
+        
         for i in range(self.frames.shape[0]):
             self.frames[i, :] = self._decode_frame(self.params[i, :], src_frames[i])
         wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         wav = frame.deemphasis(wav,coeff=0.97)##
-        # energy adjustment
-        exc_nrg = glottal.getE(track.Wave(exc, fs))
-        #assert (exc_nrg.time == nrg.time).all()
-        gain = nrg.interp_linear(exc_nrg.time) / exc_nrg.value
-        gain = track.TimeValue(exc_nrg.time, gain, nrg.fs, nrg.duration)
-        if 0: # vizualize
-            from matplotlib import pyplot as pp
-            pp.plot(gain.value)
-            pp.show()
-        exc *= gain.interp_linear(numpy.arange(len(exc)))           
+        gain = self.energy / src_energy
+        gain_interp = np.interp(np.linspace(0,1,wav.shape[0]), np.linspace(0, 1, gain.shape[0]), gain)
+        wav *= gain_interp
         return wav
     
     @abc.abstractmethod              
@@ -103,7 +98,7 @@ class SourceFilterVocoder(Vocoder):
         wav /= wav.max()
         wav *= 30000.0
         wav = wav.astype(np.int16)
-        return wav[0,:]
+        return wav
     
     def spectrogram(self):
         spec = np.zeros((self.filt.params.shape[0], 512))

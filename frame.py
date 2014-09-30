@@ -65,7 +65,7 @@ def deframesig(frames,siglen,frame_len,frame_step,winfunc=lambda x:numpy.ones((1
         rec_signal[0, indices[i,:]] = rec_signal[0, indices[i,:]] + frames[i,:]
         
     rec_signal = rec_signal/window_correction
-    return rec_signal[0:siglen]
+    return rec_signal[0, 0:siglen]
     
 def preemphasis(signal,coeff=0.97):
     """perform preemphasis on the input signal.
@@ -81,7 +81,7 @@ def deemphasis(signal,coeff=0.97):
 
 def get_energy(signal,frame_len,frame_step,winfunc=lambda x:numpy.ones((1,x))):
     frames = framesig(signal,frame_len,frame_step,winfunc=winfunc)
-    e = np.zeros((frames.shape[0], 1))
+    e = numpy.zeros(frames.shape[0])
     for i in range(frames.shape[0]):
-        e[i] = np.mean(frames[i]**2)**0.5
+        e[i] = numpy.mean(frames[i]**2)**0.5
     return e
