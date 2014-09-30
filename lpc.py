@@ -34,7 +34,7 @@ class LPCFilter(Filter):
         pass    
  
 if __name__ == '__main__':
-    fname = '/Users/hamid/Code/gitlab/voice-conversion/src/test/wav/ga_8_Kevin.wav'
+    fname = '/Users/hamid/Code/gitlab/voice-conversion2/src/test/wav/ga_8_Kevin.wav'
     order = 18
     import wave
     spf = wave.open(fname, 'r') # http://www.linguistics.ucla.edu/people/hayes/103/Charts/VChart/ae.wav
@@ -47,5 +47,7 @@ if __name__ == '__main__':
     voc = LPCVocoder(order, fs)
     voc.encode(x)
     spec = voc.spectrogram()
-    voc.decode()
+    wav = voc.decode()
+    import scipy
+    scipy.io.wavfile.write('test.wav', fs, wav)
     pass

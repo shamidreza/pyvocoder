@@ -89,7 +89,10 @@ class SourceFilterVocoder(Vocoder):
     def decode(self):                 
         src =  self.src.decode()
         wav = self.filt.decode(src)
-        return wav
+        wav /= wav.max()
+        wav *= 30000.0
+        wav = wav.astype(np.int32)
+        return wav.reshape((1, wav.shape[1]))
     
     def spectrogram(self):
         spec = np.zeros((self.filt.params.shape[0], 512))
