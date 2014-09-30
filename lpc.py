@@ -49,5 +49,5 @@ if __name__ == '__main__':
     spec = voc.spectrogram()
     wav = voc.decode()
     import scipy
-    scipy.io.wavfile.write('test.wav', fs, wav)
+    scipy.io.wavfile.write('test.wav', fs, x)
     pass

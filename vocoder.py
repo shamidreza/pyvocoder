@@ -42,7 +42,7 @@ class Filter():
         self.order = order
         self.fs = fs
     def encode(self, wav, frame_len=0.025, frame_step=0.010):
-        wav = frame.preemphasis(wav,coeff=0.97)##
+        wav = frame.preemphasis(wav,coeff=0.97)##       
         self.frame_len = int(frame_len * self.fs)
         self.frame_step = int(frame_step * self.fs)
         
@@ -57,6 +57,7 @@ class Filter():
         for i in range(self.frames.shape[0]):
             self.frames[i, :] = self._decode_frame(self.params[i, :], src_frames[i])
         wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+        wav = frame.deemphasis(wav,coeff=0.97)##
         return wav
     
     @abc.abstractmethod              
@@ -91,8 +92,8 @@ class SourceFilterVocoder(Vocoder):
         wav = self.filt.decode(src)
         wav /= wav.max()
         wav *= 30000.0
-        wav = wav.astype(np.int32)
-        return wav.reshape((1, wav.shape[1]))
+        wav = wav.astype(np.int16)
+        return wav[0,:]
     
     def spectrogram(self):
         spec = np.zeros((self.filt.params.shape[0], 512))

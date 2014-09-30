@@ -2,6 +2,7 @@
 # Author: James Lyons 2012
 # Website: https://github.com/jameslyons/python_speech_features
 
+from scipy.signal import lfilter
 import numpy
 import math
 
@@ -66,7 +67,7 @@ def deframesig(frames,siglen,frame_len,frame_step,winfunc=lambda x:numpy.ones((1
     rec_signal = rec_signal/window_correction
     return rec_signal[0:siglen]
     
-def preemphasis(signal,coeff=0.95):
+def preemphasis(signal,coeff=0.97):
     """perform preemphasis on the input signal.
     
     :param signal: The signal to filter.
@@ -75,4 +76,6 @@ def preemphasis(signal,coeff=0.95):
     """    
     return numpy.append(signal[0],signal[1:]-coeff*signal[:-1])
 
+def deemphasis(signal,coeff=0.97):    
+    return lfilter([1.0], numpy.array([1., -coeff]), signal)
 
