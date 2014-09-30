@@ -104,7 +104,7 @@ class PulseNoiseSource(Source):
         self.time = np.linspace(0, self.duration, self.f0.shape[0])/self.fs
     def decode(self):
         ret = np.zeros(self.duration)
-        noise = np.random.rand(self.duration)/5.0        
+        noise = 0.1-np.random.rand(self.duration)/5.0   
         pulse = np.zeros(self.duration)
         cur_period = 100
         cur = cur_period
@@ -130,14 +130,13 @@ class PulseNoiseSource(Source):
         for i in range(self.f0.shape[0]):
             if check is False and (self.f0[i] > 0 or i == self.f0.shape[0]-1): # end of unvoiced segment
                 en = self.time[i]
-                print int(np.floor(self.fs*st)),int(np.floor(self.fs*en))
+                #print int(np.floor(self.fs*st)),int(np.floor(self.fs*en))
                 ret[int(np.floor(self.fs*st)):int(np.floor(self.fs*en))] = noise[int(np.floor(self.fs*st)):int(np.floor(self.fs*en))]
                 check = True
             if check is True and self.f0[i] == 0.0: # start of unvoiced segment
                 check = False
                 st = self.time[i]
             
-                
         return ret
     
 class MixedExcitationSource(Source):    
