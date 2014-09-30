@@ -79,3 +79,9 @@ def preemphasis(signal,coeff=0.97):
 def deemphasis(signal,coeff=0.97):    
     return lfilter([1.0], numpy.array([1., -coeff]), signal)
 
+def get_energy(signal,frame_len,frame_step,winfunc=lambda x:numpy.ones((1,x))):
+    frames = framesig(signal,frame_len,frame_step,winfunc=winfunc)
+    e = np.zeros((frames.shape[0], 1))
+    for i in range(frames.shape[0]):
+        e[i] = np.mean(frames[i]**2)**0.5
+    return e

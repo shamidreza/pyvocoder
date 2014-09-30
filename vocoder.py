@@ -51,13 +51,23 @@ class Filter():
         self.params = np.zeros((self.frames.shape[0], param_size))
         for i in range(self.frames.shape[0]):
             self.params[i, :] = self._encode_frame(self.frames[i])
-            
+             
     def decode(self, src_signal):
         src_frames = frame.framesig(src_signal, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         for i in range(self.frames.shape[0]):
             self.frames[i, :] = self._decode_frame(self.params[i, :], src_frames[i])
         wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
         wav = frame.deemphasis(wav,coeff=0.97)##
+        # energy adjustment
+        exc_nrg = glottal.getE(track.Wave(exc, fs))
+        #assert (exc_nrg.time == nrg.time).all()
+        gain = nrg.interp_linear(exc_nrg.time) / exc_nrg.value
+        gain = track.TimeValue(exc_nrg.time, gain, nrg.fs, nrg.duration)
+        if 0: # vizualize
+            from matplotlib import pyplot as pp
+            pp.plot(gain.value)
+            pp.show()
+        exc *= gain.interp_linear(numpy.arange(len(exc)))           
         return wav
     
     @abc.abstractmethod              
