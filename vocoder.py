@@ -42,27 +42,30 @@ class Filter():
         self.order = order
         self.fs = fs
     def encode(self, wav, frame_len=0.025, frame_step=0.010):
+        winfunc=lambda x:np.hamming(x).reshape((1,x))
         self.frame_len = int(frame_len * self.fs)
         self.frame_step = int(frame_step * self.fs)        
-        self.energy = frame.get_energy(wav, self.frame_len, self.frame_step)        
         wav = frame.preemphasis(wav,coeff=0.97)##       
-
-        self.frames = frame.framesig(wav, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+        self.energy = frame.get_energy(wav, self.frame_len, self.frame_step, winfunc=winfunc)        
+        
+        self.frames = frame.framesig(wav, self.frame_len, self.frame_step, winfunc=winfunc)
         param_size = len(self._encode_frame(self.frames[0]))
         self.params = np.zeros((self.frames.shape[0], param_size))
         for i in range(self.frames.shape[0]):
             self.params[i, :] = self._encode_frame(self.frames[i])
     def decode(self, src_signal):
-        src_frames = frame.framesig(src_signal, self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+        winfunc=lambda x:np.hamming(x).reshape((1,x))
         src_energy = frame.get_energy(src_signal, self.frame_len, self.frame_step)
+        gain = self.energy / src_energy
+        gain_interp = np.interp(np.linspace(0,1,src_signal.shape[0]), np.linspace(0, 1, gain.shape[0]), gain)
+        src_signal *= gain_interp
+        src_frames = frame.framesig(src_signal, self.frame_len, self.frame_step)
         
         for i in range(self.frames.shape[0]):
-            self.frames[i, :] = self._decode_frame(self.params[i, :], src_frames[i])
-        wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=lambda x:np.ones((1,x)))
+            self.frames[i, :] = self._decode_frame(self.params[i, :], np.r_[src_frames[max(0,i-1)],src_frames[i]])[self.frame_len:]
+        wav = frame.deframesig(self.frames, src_signal.shape[0], self.frame_len, self.frame_step, winfunc=winfunc)
         wav = frame.deemphasis(wav,coeff=0.97)##
-        gain = self.energy / src_energy
-        gain_interp = np.interp(np.linspace(0,1,wav.shape[0]), np.linspace(0, 1, gain.shape[0]), gain)
-        wav *= gain_interp
+        #wav *= gain_interp
         return wav
     
     @abc.abstractmethod              
