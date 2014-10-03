@@ -8,7 +8,7 @@ from vocoder import SourceFilterVocoder, Filter
 import source
 
 from scikits.talkbox import lpc
-from scipy.signal import lfilter, hamming, freqz
+from scipy.signal import lfilter, hamming, freqz, deconvolve, convolve
         
 def levinson_durbin():
     pass
@@ -51,6 +51,11 @@ class LPCVocoder(SourceFilterVocoder):
     def __init__(self, order, fs):
         self.src = source.PulseNoiseSource(fs)
         self.filt = LPCFilter(order, fs)
+
+class LSFVocoder(SourceFilterVocoder):
+    def __init__(self, order, fs):
+        self.src = source.PulseNoiseSource(fs)
+        self.filt = LSFFilter(order, fs)
     
 class LPCFilter(Filter):
     def __init__(self, order, fs):
@@ -75,7 +80,7 @@ class LSFFilter(LPCFilter):
         return poly2lsf(A)
     def _decode_frame(self, param, src_signal):
         A = lsf2poly(param)
-        return LPCFilter._decode_frame(self, A)
+        return LPCFilter._decode_frame(self, A, src_signal)
     def filter2spectrum(self, param):
         A = lsf2poly(param)        
         return LPCFilter.filter2spectrum(self, A)
@@ -93,10 +98,11 @@ if __name__ == '__main__':
     x = np.fromstring(x, 'Int16')
     import source
     #f0 = source.getf0_python(x, fs, frame_len=0.025, frame_step=0.010 )
-    voc = LPCVocoder(order, fs)
+    #voc = LPCVocoder(order, fs)
+    voc = LSFVocoder(order, fs)
     voc.encode(x)
     spec = voc.spectrogram()
     wav = voc.decode()
     import scipy
-    scipy.io.wavfile.write('test.wav', fs, wav)
+    scipy.io.wavfile.write('testlsf.wav', fs, wav)
     pass
