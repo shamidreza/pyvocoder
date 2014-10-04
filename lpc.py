@@ -1,17 +1,57 @@
 """
 LPC class
 """
+# pytho libraries
+import logging
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING) 
+
+# third-party librareis
 import numpy as np
 from matplotlib import pyplot as pp
+from scipy.signal import lfilter, hamming, freqz, deconvolve, convolve
+from numpy.fft import rfft, irfft       
 
+# pyvocoder
 from vocoder import SourceFilterVocoder, Filter
 import source
 
-from scikits.talkbox import lpc
-from scipy.signal import lfilter, hamming, freqz, deconvolve, convolve
-        
-def levinson_durbin():
-    pass
+def lpc_python(x, order):
+    def levinson(R,order):
+        """ input: autocorrelation and order, output: LPC coefficients """
+        a   = np.zeros(order+2)
+        a[0] = -1
+        k = np.zeros(order+1)
+        # step 1: initialize prediction error "e" to R[0]
+        e = R[0]
+        # step 2: iterate over [1:order]
+        for i in range(1,order+1):
+            # step 2-1: calculate PARCOR coefficients
+            k[i]= (R[i] - np.sum(a[1:i] * R[i-1:0:-1])) / e
+            # step 2-2: update LPCs
+            a[i] = np.copy(k[i])
+            a_old = np.copy(a) 
+            for j in range(1,i):
+                a[j] -=  k[i]* a_old[i-j] 
+            # step 2-3: update prediction error "e" 
+            e = e * (1.0 - k[i]**2)
+        return -1*a[0:order+1], e, -1*k[1:]
+    # N: compute next power of 2
+    n = x.shape[0]
+    N = int(np.power(2, np.ceil(np.log2(2 * n - 1))))
+    # calculate autocorrelation using FFT
+    X = rfft(x, N)
+    r = irfft(abs(X) ** 2)[:order+1]
+    return levinson(r, order)
+
+try:
+    from scikits.talkbox import lpc as lpc
+    lpc_func = lpc
+except:
+    logging.warning('scikits.talkbox could not be imported. Using python version of levinson recursion.')
+    lpc_func = lpc_python
+    
 def poly2lsf(a):
     a = a / a[0]        
     A = np.r_[a, 0.0]
@@ -62,7 +102,7 @@ class LPCFilter(Filter):
         Filter.__init__(self, order, fs)
    
     def _encode_frame(self, signal):
-        A, e, k = lpc(signal, self.order) 
+        A, e, k = lpc_func(signal, self.order)  
         return A
     def _decode_frame(self, param, src_signal):
         return lfilter([1], param, src_signal)
