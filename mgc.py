@@ -597,8 +597,77 @@ def _gnorm(c1, c2, m, g):
         c2[0] = np.exp(c1[0])
     
        
-def _gc2gc():
-    pass
+def _gc2gc(c1, m1, g1, c2, m2, g2):
+    """
+    void gc2gc(double *c1, const int m1, const double g1, double *c2, const int m2,
+               const double g2)
+    {
+       int i, min, k, mk;
+       double ss1, ss2, cc;
+       static double *ca = NULL;
+       static int size;
+    
+       if (ca == NULL) {
+          ca = dgetmem(m1 + 1);
+          size = m1;
+       }
+       if (m1 > size) {
+          free(ca);
+          ca = dgetmem(m1 + 1);
+          size = m1;
+       }
+    
+       movem(c1, ca, sizeof(*c1), m1 + 1);
+    
+       c2[0] = ca[0];
+       for (i = 1; i <= m2; i++) {
+          ss1 = ss2 = 0.0;
+          min = (m1 < i) ? m1 : i - 1;
+          for (k = 1; k <= min; k++) {
+             mk = i - k;
+             cc = ca[k] * c2[mk];
+             ss2 += k * cc;
+             ss1 += mk * cc;
+          }
+    
+          if (i <= m1)
+             c2[i] = ca[i] + (g2 * ss2 - g1 * ss1) / i;
+          else
+             c2[i] = (g2 * ss2 - g1 * ss1) / i;
+       }
+    
+       return;
+    }    
+    """
+    i = k = mk = 0
+    ss1 = ss2 = cc = 0.0
+    ca = None
+    _size = 0
+    
+    if ca is None:
+        ca = np.zeros(m1+1)
+        _size = m1
+    if m1 > _size:
+        ca = np.zeros(m1+1)
+        _size = m1   
+   
+    ca[:] = c1[:]
+    for i in range(1, m2+1):
+        ss1 = ss2 = 0.0
+        if m1 < i:
+            _min = m1
+        else:
+            _min = i - 1
+        for k in range(1, _min+1):
+            mk = i - k
+            cc = ca[k] * c2[mk]
+            ss2 += k * cc
+            ss1 += mk * cc
+        if i <= m1:
+            c2[i] = ca[i] + (g2 * ss2 - g1 * ss1) / i
+        else:
+            c2[i] = (g2 * ss2 - g1 * ss1) / i
+            
 def mgc_python(x, order):
     pass
 def mlsa_python(param, src_signal):
