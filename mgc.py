@@ -411,22 +411,116 @@ def _mgcep(xw, flng, b, m, a, g, n, itr1, itr2, dd, etype, e, f, itype):
     ep = epo = eps = 0.0
     _min = _max = 0.0
        
-
-    if (etype == 1 && e < 0.0) {
-          fprintf(stderr, "mgcep : value of e must be e>=0!\n");
-          exit(1);
-       }
+    if etype == 1 and e < 0.0:
+        raise Exception("mgcep : value of e must be e>=0!") 
     
-       if (etype == 2 && e >= 0.0) {
-          fprintf(stderr, "mgcep : value of E must be E<0!\n");
-          exit(1);
-       }
+    if etype == 2 and e >= 0.0:
+        raise Exception("mgcep : value of E must be E<0!") 
     
-       if (etype == 1) {
-          eps = e;
-       }
+    if etype == 1:
+        eps = e
+        
+    if x == None:
+        x = np.zeros(flng)
+        y = np.zeros(flng)
+        size_x = flng
+        d = np.zeros(m+1)
+        size_c = m
+    if flng > size_x:
+        x = np.zeros(flng)
+        y = np.zeros(flng)
+        size_x = flng  
 
+    if m > size_c:
+        d = np.zeros(m+1)
+        size_c = m
+    
+    x[:] = xw[:]
 
+    if itype == 0: # time-domain signal
+        xt = np.fft.rfft(x)
+        x = xt.real
+        y = xt.imag
+        for i in range(0, flng):
+            x[i] = x[i] * x[i] + y[i] * y[i] + eps
+    elif itype == 1: # dB
+        for i in range(0, 1+flng/2):
+            x[i] = np.exp((x[i]/20.0)*np.log(10.0))
+            x[i] = x[i] * x[i] + eps
+    elif itype == 2: # log
+        for i in range(0, 1+flng/2):
+            x[i] = np.exp(x[i])
+            x[i] = x[i] * x[i] + eps    
+    elif itype == 3: # amplitude
+        for i in range(0, 1+flng/2):
+            x[i] = x[i] * x[i] + eps            
+    elif itype == 4: # periodogram
+        for i in range(0, 1+flng/2):
+            x[i] = x[i] + eps     
+    else:
+        raise Exception("mgcep : Input type %d is not supported!") 
+      
+    if itype > 0:
+        for i in range(1, flng/2):
+            x[flng-i] = x[i]
+
+    if etype == 2 and e < 0.0:
+        _max = x[0]
+        for i in range(1, flng):
+            if _max < x[i]:
+                _max = x[i]
+        _max = np.sqrt(_max)
+        _min = _max * np.power(10.0, e/20.0)
+        _min = _min * _min
+        for i in range(0, flng):
+            if x[i] < _min:
+                x[i] = _min
+        
+    b[:] = 0.0
+    ep = _newton(x, flng, b, m, a, -1.0, n, 0, f)
+    if g != -1.0:
+        if a != 0.0:
+            _ignorm(b, b, m, -1.0)
+            _b2mc(b, b, m, a)
+            _gnorm(b, d, m, -1.0)
+        else:
+            d[:] = b[:]
+             
+        _gc2gc(d, m, -1.0, b, m, g)
+        
+        if 1 != 0.0:
+            _ignorm(b, b, m, g)
+            _mc2b(b, b, m, a)
+            _gnorm(b, b, m, g) 
+    
+    # Newton-Raphson method
+    if g != -1.0:
+        for j in range(1, itr2+1):
+            epo = ep
+            ep = _newton(x, flng, b, m, a, g, n, j, f)
+            
+            if j >= itr1:
+                if np.abs((epo - ep) / ep) < dd:
+                    flag = 1
+            if flag == 1:
+                break
+    
+    if flag:
+        return 0
+    else:
+        return -1
+              
+   
+def _theq():
+    pass
+def _ignorm():
+    pass
+def _b2mc():
+    pass
+def _gnorm():
+    pass
+def _gc2gc():
+    pass
 def mgc_python(x, order):
     pass
 def mlsa_python(param, src_signal):
