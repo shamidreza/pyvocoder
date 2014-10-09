@@ -513,12 +513,90 @@ def _mgcep(xw, flng, b, m, a, g, n, itr1, itr2, dd, etype, e, f, itype):
    
 def _theq():
     pass
-def _ignorm():
-    pass
-def _b2mc():
-    pass
-def _gnorm():
-    pass
+def _ignorm(c1, c2, m, g):
+    """
+    void ignorm(double *c1, double *c2, int m, const double g)
+    {
+       double k;
+    
+       k = pow(c1[0], g);
+       if (g != 0.0) {
+          for (; m >= 1; m--)
+             c2[m] = k * c1[m];
+          c2[0] = (k - 1.0) / g;
+       } else {
+          movem(&c1[1], &c2[1], sizeof(*c1), m);
+          c2[0] = log(c1[0]);
+       }
+    
+       return;
+    }
+    
+    """
+    k = 0.0
+    k = np.power(c1[0], g)
+    if g != 0.0:
+        for mm in range(m, 0, -1):
+            c2[mm] = k * c1[mm]
+        c2[0] = (k-1.0)/g
+    else:
+        c2[1:] = c1[1:]
+        c2[0] = np.log(c1[0])
+        
+def _b2mc(b, mc, m, a):
+    """
+    void b2mc(double *b, double *mc, int m, const double a)
+    {
+       double d, o;
+    
+       d = mc[m] = b[m];
+       for (m--; m >= 0; m--) {
+          o = b[m] + a * d;
+          d = b[m];
+          mc[m] = o;
+       }
+    
+       return;
+    }    
+    """
+    d = o = 0.0
+    d = mc[m] = b[m]
+    for mm in range(m-1, -1, -1): # sure?
+        o = b[m] + a * d
+        d = b[m]
+        mc[m] = o
+        
+def _gnorm(c1, c2, m, g):
+    """
+    void gnorm(double *c1, double *c2, int m, const double g)
+    {
+       double k;
+    
+       if (g != 0.0) {
+          k = 1.0 + g * c1[0];
+          for (; m >= 1; m--)
+             c2[m] = c1[m] / k;
+          c2[0] = pow(k, 1.0 / g);
+       } else {
+          movem(&c1[1], &c2[1], sizeof(*c1), m);
+          c2[0] = exp(c1[0]);
+       }
+    
+       return;
+    }
+    
+    """
+    k = 0.0
+    if g != 0.0:
+        k = 1.0 + g * c1[0]
+        for mm in range(m, 0, -1):
+            c2[mm] = c1[mm] / k
+        c2[0] = np.power(k, 1.0/g)
+    else:
+        c2[1:] = c1[1:]
+        c2[0] = np.exp(c1[0])
+    
+       
 def _gc2gc():
     pass
 def mgc_python(x, order):
