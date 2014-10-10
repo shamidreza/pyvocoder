@@ -733,19 +733,19 @@ def cal_x(x, xx, bx, i):
     for j in range(1, i):
         _crstrns(t, xx[i - j])
         _mm_mul(s, t, bx)
-        x[j][0] -= s[0]
-        x[j][1] -= s[1]
-        x[j][2] -= s[2]
-        x[j][3] -= s[3]
+        x[j,0] -= s[0]
+        x[j,1] -= s[1]
+        x[j,2] -= s[2]
+        x[j,3] -= s[3]
     for j in range(1, i):
-        xx[j][0] = x[j][0]
-        xx[j][1] = x[j][1]
-        xx[j][2] = x[j][2]
-        xx[j][3] = x[j][3]
-    x[i][0] = xx[i][0] = -bx[0]
-    x[i][1] = xx[i][1] = -bx[1]
-    x[i][2] = xx[i][2] = -bx[2]
-    x[i][3] = xx[i][3] = -bx[3]
+        xx[j,0] = x[j,0]
+        xx[j,1] = x[j,1]
+        xx[j,2] = x[j,2]
+        xx[j,3] = x[j,3]
+    x[i,0] = xx[i,0] = -bx[0]
+    x[i,1] = xx[i,1] = -bx[1]
+    x[i,2] = xx[i,2] = -bx[2]
+    x[i,3] = xx[i,3] = -bx[3]
     
 def _cal_vx(vx, ex, bx):
     _crstrns(t, ex)
@@ -767,92 +767,62 @@ def _cal_p(p, x, g, i):
     for j in range(0, i):
         _crstrns(t, x[i - j])
         _mv_mul(s, t, g)
-        p[j][0] += s[0]
-        p[j][1] += s[1]
-    p[i][0] = g[0]
-    p[i][1] = g[1]
+        p[j,0] += s[0]
+        p[j,1] += s[1]
+    p[i,0] = g[0]
+    p[i,1] = g[1]
 
 def _theq(t, h, a, b, n, eps):
     r = x = xx = p = None
     _size = 0
     i = 0
     if r is None:
-        pass
-
+        r = np.zeros((n, 4))
+        x = np.zeros((n, 4))
+        xx = np.zeros((n, 4))
+        p = np.zeros((n, 2))
+        _size = n
+    if n > _size:
+        r = np.zeros((n, 4))
+        x = np.zeros((n, 4))
+        xx = np.zeros((n, 4))
+        p = np.zeros((n, 2))            
+        _size = n
+        
+    if eps < 0.0:
+        eps = 1.0e-6
+    
+    for i in range(n):
+        r[i,3] = t[i]
+        r[i,0] = r[i,3]
+        r[i,1] = h[n - 1 + i]
+        r[i,2] = h[n - 1 - i]
+        
+    x[0,0] = x[0,3] = 1.0
+    _cal_p0(p, r, b, n, eps)
+    vx[0] = r[0,0]
+    vx[1] = r[0,1]
+    vx[2] = r[0,2]
+    vx[3] = r[0,3]
+    
+    for i in range(1, n):
+        _cal_ex(ex, r, x, i)
+        _cal_ep(ep, r, p, i)
+        _cal_bx(bx, vx, ex, eps)
+        _cal_x(x, xx, bx, i)
+        _cal_vx(vx, ex, bx)
+        _cal_g(g, vx, b, ep, i, n, eps)
+        _cal_p(p, x, g, i)
+     
+    for i in range(n):
+        a[i] = p[i,0]
+        
+        
+    
+        
 
 """
-int theq(double *t, double *h, double *a, double *b, const int n, double eps)
-{
-   static double **r = NULL, **x, **xx, **p;
-   static int size;
-   double ex[4], ep[2], vx[4], bx[4], g[2];
-   int i;
 
-   if (r == NULL) {
-      r = mtrx2(n, 4);
-      x = mtrx2(n, 4);
-      xx = mtrx2(n, 4);
-      p = mtrx2(n, 2);
-      size = n;
-   }
-   if (n > size) {
-      for (i = 0; i < n; i++) {
-         free((char *) r[i]);
-         free((char *) x[i]);
-         free((char *) xx[i]);
-         free((char *) p[i]);
-      }
-      free((char *) r);
-      free((char *) x);
-      free((char *) xx);
-      free((char *) p);
-
-      r = mtrx2(n, 4);
-      x = mtrx2(n, 4);
-      xx = mtrx2(n, 4);
-      p = mtrx2(n, 2);
-      size = n;
-   }
-
-   if (eps < 0.0)
-      eps = 1.0e-6;
-
-   /* make r */
-   for (i = 0; i < n; i++) {
-      r[i][0] = r[i][3] = t[i];
-      r[i][1] = h[n - 1 + i];
-      r[i][2] = h[n - 1 - i];
-   }
-
-   /* step 1 */
-   x[0][0] = x[0][3] = 1.0;
-   if (cal_p0(p, r, b, n, eps) == -1)
-      return (-1);
-
-   vx[0] = r[0][0];
-   vx[1] = r[0][1];
-   vx[2] = r[0][2];
-   vx[3] = r[0][3];
-
-   /* step 2 */
-   for (i = 1; i < n; i++) {
-      cal_ex(ex, r, x, i);
-      cal_ep(ep, r, p, i);
-      if (cal_bx(bx, vx, ex, eps) == -1)
-         return (-1);
-      cal_x(x, xx, bx, i);
-      cal_vx(vx, ex, bx);
-      if (cal_g(g, vx, b, ep, i, n, eps) == -1)
-         return (-1);
-      cal_p(p, x, g, i);
-   }
-
-   /* step 3 */
-   for (i = 0; i < n; i++)
-      a[i] = p[i][0];
-
-   return (0);
-}
 """
 def mgc_python(x, order):
     pass
