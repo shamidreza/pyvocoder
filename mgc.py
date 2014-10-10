@@ -509,10 +509,7 @@ def _mgcep(xw, flng, b, m, a, g, n, itr1, itr2, dd, etype, e, f, itype):
         return 0
     else:
         return -1
-              
-   
-def _theq():
-    pass
+            
 def _ignorm(c1, c2, m, g):
     """
     void ignorm(double *c1, double *c2, int m, const double g)
@@ -668,6 +665,47 @@ def _gc2gc(c1, m1, g1, c2, m2, g2):
         else:
             c2[i] = (g2 * ss2 - g1 * ss1) / i
             
+def _theq():
+    pass
+
+def _mv_mul(t, x, y):
+    t[0] = x[0] * y[0] + x[1] * y[1]
+    t[1] = x[2] * y[0] + x[3] * y[1]
+    
+def _mm_ml(t, x, y):
+    t[0] = x[0] * y[0] + x[1] * y[2]
+    t[1] = x[0] * y[1] + x[1] * y[3]
+    t[2] = x[2] * y[0] + x[3] * y[2]
+    t[3] = x[2] * y[1] + x[3] * y[3]    
+ 
+def _inverse(x, y, eps):
+    det = 0.0
+    det = y[0] * y[3] - y[1] * y[2]
+    if np.abs(det) or np.isnan(det):
+        raise Exception('theq() : determinant of the normal matrix is too small!')
+    x[0] = y[3] / det
+    x[1] = -y[1] / det
+    x[2] = -y[2] / det
+    x[3] = y[0] / det   
+
+def _crstrns(x, y):
+    x[0] = y[3]
+    x[1] = y[2]
+    x[2] = y[1]
+    x[3] = y[0]
+    
+def _cal_p0(p, r, b, n, eps):
+    _inverse(t, r[0], eps)
+    s[0] = b[0]
+    s[1] = b[n - 1]
+    _mv_mul(p[0], t, s)
+    
+"""
+
+
+
+
+"""
 def mgc_python(x, order):
     pass
 def mlsa_python(param, src_signal):
