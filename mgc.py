@@ -817,15 +817,58 @@ def _theq(t, h, a, b, n, eps):
     for i in range(n):
         a[i] = p[i,0]
         
-        
-    
-        
-
-"""
-
-"""
+     
 def mgc_python(x, order):
-    pass
+    # $(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 > mgc/$${base}.mgc; \
+    #define ALPHA  0.35
+    #define GAMMA  0.0
+    #define ORDER  25
+    #define FLENG  256
+    #define OTYPE  0
+    #define ITYPE  0
+    #define ETYPE 0
+    #define MINITR 2
+    #define MAXITR 30
+    #define END    0.001
+    #define EPS    0.0
+    #define MINDET 0.000001    
+    ALPHA = 0.35
+    GAMMA = 0.0
+    ORDER= order
+    FLENG = x.shape[0]
+    OTYPE = 0
+    ITYPE = 0
+    ETYPE = 0
+    MINITR = 2
+    MAXITR = 30
+    END = 30
+    EPS = 0.0
+    MINDET = 0.000001
+    m = ORDER
+    flng = FLENG
+    ilng = FLENG
+    itr1 = MINITR
+    itr2 = MAXITR
+    n = -1
+    flag = 0
+    otype = OTYPE
+    itype = ITYPE
+    etype = ETYPE   
+    a = ALPHA
+    g = GAMMA
+    end = END
+    e = EPS
+    f = MINDET
+    if n == -1:
+        n = flng -1
+    if itype == 0:
+        ilng = flng;
+    else:
+        ilng = flng / 2 + 1
+    b = np.zeros(m+m+2)
+    _mgcep(x, flng, b, m, a, g, n, itr1, itr2, end, etype, e, f, itype)
+    return b
+
 def mlsa_python(param, src_signal):
     pass
 
@@ -852,3 +895,22 @@ class MGCFilter(Filter):
         pass    
     
     
+if __name__ == '__main__':
+    fname = '/Users/hamid/Code/gitlab/voice-conversion2/src/test/wav/ga_8_Kevin.wav'
+    order = 24
+    import wave
+    spf = wave.open(fname, 'r') # http://www.linguistics.ucla.edu/people/hayes/103/Charts/VChart/ae.wav
+    fs = spf.getframerate()
+    # Get file as numpy array.
+    x = spf.readframes(-1)
+    x = np.fromstring(x, 'Int16')
+    import source
+    #f0 = source.getf0_python(x, fs, frame_len=0.025, frame_step=0.010 )
+    #voc = LPCVocoder(order, fs)
+    voc = MGCVocoder(order, fs)
+    voc.encode(x)
+    spec = voc.spectrogram()
+    wav = voc.decode()
+    import scipy
+    scipy.io.wavfile.write('testlsf.wav', fs, wav)
+    pass
